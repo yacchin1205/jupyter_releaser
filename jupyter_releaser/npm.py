@@ -39,16 +39,18 @@ def build_dist(package, dist_dir):
     if not osp.isdir(package):
         return
 
-    if "workspaces" in data:
-        paths = []
-        for path in _get_workspace_packages(data):
-            package_json = path / "package.json"
-            data = json.loads(package_json.read_text(encoding="utf-8"))
-            if data.get("private", False):
-                continue
-            paths.append(str(osp.abspath(path)).replace(os.sep, "/"))
-
-        util.run(f"npm pack {' '.join(paths)}", cwd=dest, quiet=True)
+    if "workspaces" not in data:
+        return
+    paths = []
+    for path in _get_workspace_packages(data):
+        package_json = path / "package.json"
+        data = json.loads(package_json.read_text(encoding="utf-8"))
+        if data.get("private", False):
+            continue
+        paths.append(str(osp.abspath(path)).replace(os.sep, "/"))
+    if len(paths) == 0:
+        return
+    util.run(f"npm pack {' '.join(paths)}", cwd=dest, quiet=True)
 
 
 def extract_dist(dist_dir, target):
